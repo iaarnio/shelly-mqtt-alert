@@ -23,7 +23,10 @@ const client = mqtt.connect(mqttOptions);
 // Subscribe to a specific Tasmota topic
 client.on('connect', () => {
   console.log('Connected to MQTT broker');
-  client.subscribe('tasmota/sensor/data'); // Replace with your Tasmota topic
+  client.subscribe('cmnd/shellyplug/usage/#');
+});
+client.on('error', (error) => {
+  console.log('MQTT Connection Error:', error);
 });
 
 // Function to send an alert email
