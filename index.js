@@ -1,7 +1,7 @@
-// Import dependencies
 const mqtt = require('mqtt');
 const nodemailer = require('nodemailer');
 
+// Set MQTT and email configuration
 const mqttOptions = {
   host: process.env.MQTT_HOST,
   username: process.env.MQTT_USERNAME,
@@ -16,28 +16,14 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-
-// Connect to the MQTT broker
-const client = mqtt.connect(mqttOptions);
-
-// Subscribe to a specific Tasmota topic
-client.on('connect', () => {
-  console.log('Connected to MQTT broker');
-  client.subscribe('cmnd/shellyplug/usage/#');
-});
-client.on('error', (error) => {
-  console.log('MQTT Connection Error:', error);
-});
-
 // Function to send an alert email
 function sendAlert(message) {
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: process.env.EMAIL_USER,
-    subject: 'Tasmota Alert',
-    text: `Alert: ${message}`
+    subject: 'Mairen älypistorasian hälytys',
+    text: `Hälytys: ${message}`
   };
-
 
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
@@ -47,13 +33,24 @@ function sendAlert(message) {
   });
 }
 
+// Connect to the MQTT broker
+const client = mqtt.connect(mqttOptions);
+
+client.on('connect', () => {
+  console.log('Connected to MQTT broker');
+  client.subscribe('cmnd/shellyplug/usage/alert');
+});
+
+client.on('error', (error) => {
+  console.log('MQTT Connection Error:', error);
+});
+
 // Process incoming MQTT messages
 client.on('message', (topic, message) => {
   console.log(`Received message: ${message.toString()} on topic: ${topic}`);
 
-  // Parse message and trigger email alert if needed
-  const data = JSON.parse(message.toString());
-  if (data.ENERGY && data.ENERGY.Power > 10) { // Adjust condition as needed
-    sendAlert(`High power usage detected: ${data.ENERGY.Power}W`);
+  // When an alert message is received from Tasmota, send an email alert
+  if (topic === 'cmnd/shellyplug/usage/alert') {
+    sendAlert("Ei vedenkeittimen käyttöä klo 05:00-12:00 välillä.");
   }
 });
