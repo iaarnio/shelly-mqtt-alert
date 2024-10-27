@@ -29,11 +29,12 @@ client.on('connect', () => {
 // Function to send an alert email
 function sendAlert(message) {
   const mailOptions = {
-    from: 'your-email@gmail.com',
-    to: 'your-email@gmail.com',
+    from: process.env.EMAIL_USER,
+    to: process.env.EMAIL_USER,
     subject: 'Tasmota Alert',
     text: `Alert: ${message}`
   };
+
 
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
