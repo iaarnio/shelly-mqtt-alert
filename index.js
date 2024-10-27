@@ -2,22 +2,20 @@
 const mqtt = require('mqtt');
 const nodemailer = require('nodemailer');
 
-// MQTT configuration
 const mqttOptions = {
-  host: 'mqtt://your-mqtt-broker-url',
-  port: 1883,
-  username: 'your-mqtt-username',
-  password: 'your-mqtt-password'
+  host: process.env.MQTT_HOST,
+  username: process.env.MQTT_USERNAME,
+  password: process.env.MQTT_PASSWORD
 };
 
-// Nodemailer configuration
 const transporter = nodemailer.createTransport({
-  service: 'gmail', // or use a different email service
+  service: 'gmail',
   auth: {
-    user: 'your-email@gmail.com',
-    pass: 'your-email-password'
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   }
 });
+
 
 // Connect to the MQTT broker
 const client = mqtt.connect(mqttOptions);
