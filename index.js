@@ -1,56 +1,58 @@
 const mqtt = require('mqtt');
+const cron = require('node-cron');
 const nodemailer = require('nodemailer');
 
-// Set MQTT and email configuration
-const mqttOptions = {
-  host: process.env.MQTT_HOST,
-  username: process.env.MQTT_USERNAME,
-  password: process.env.MQTT_PASSWORD
-};
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
+// MQTT Connection
+const client = mqtt.connect({
+    host: process.env.MQTT_HOST,
+    username: process.env.MQTT_USERNAME,
+    password: process.env.MQTT_PASSWORD
 });
 
-// Function to send an alert email
-function sendAlert(message) {
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: process.env.EMAIL_USER,
-    subject: 'Mairen älypistorasian hälytys',
-    text: `Hälytys: ${message}`
-  };
+let powerUseDetected = false; // Flag to track power usage
 
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      return console.log(`Error: ${error}`);
+// Nodemailer setup
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
     }
-    console.log(`Email sent: ${info.response}`);
-  });
+});
+
+function sendAlert(message) {
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: process.env.EMAIL_USER,
+        subject: 'Boiler Usage Alert',
+        text: message
+    };
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) console.log(`Error: ${error}`);
+        else console.log(`Email sent: ${info.response}`);
+    });
 }
 
-// Connect to the MQTT broker
-const client = mqtt.connect(mqttOptions);
-
-client.on('connect', () => {
-  console.log('Connected to MQTT broker');
-  client.subscribe('cmnd/shellyplug/usage/alert');
-});
-
-client.on('error', (error) => {
-  console.log('MQTT Connection Error:', error);
-});
-
-// Process incoming MQTT messages
+// Check for power usage during the monitoring window (05:00 - 12:00)
 client.on('message', (topic, message) => {
-  console.log(`Received message: ${message.toString()} on topic: ${topic}`);
+    const currentTime = new Date();
+    const currentHour = currentTime.getHours();
 
-  // When an alert message is received from Tasmota, send an email alert
-  if (topic === 'cmnd/shellyplug/usage/alert') {
-    sendAlert("Ei vedenkeittimen käyttöä klo 05:00-12:00 välillä.");
-  }
+    if (!powerUseDetected && currentHour >= 5 && currentHour < 12) {
+        powerUseDetected = true;
+        console.log(`Power usage detected at ${currentTime.toISOString()}`);
+    }
 });
+
+// Schedule the 12:03 daily check using node-cron
+cron.schedule('03 12 * * *', () => {
+    checkUsage();
+});
+
+// Define checkUsage to send an alert if no power usage was detected
+function checkUsage() {
+    if (!powerUseDetected) {
+      sendAlert("Ei vedenkeittimen käyttöä klo 05:00-12:00 välillä.");
+    }
+    powerUseDetected = false; // Reset flag for the next day
+}
