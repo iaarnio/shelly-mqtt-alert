@@ -63,7 +63,7 @@ export default async function handler(req, res) {
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_USER,
       subject: 'No Boiler Usage Detected',
-      text: 'No boiler usage detected this morning by 12:15 PM.',
+      text: 'No boiler usage detected this morning.',
     };
 
     try {
