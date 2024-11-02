@@ -1,0 +1,10 @@
+{
+  "cron": {
+    "jobs": [
+      {
+        "path": "/api/daily-check",
+        "schedule": "15 12 * * *"
+      }
+    ]
+  }
+}
