@@ -8,6 +8,7 @@ export default async function handler(req, res) {
     return res.status(401).end('Unauthorized');
   }
 
+
   console.log("Cron job started.");
 
   let powerUseDetected = false;
