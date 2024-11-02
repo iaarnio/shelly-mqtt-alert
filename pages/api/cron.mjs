@@ -4,6 +4,7 @@ import nodemailer from 'nodemailer';
 export default async function handler(req, res) {
   // Ensure the request is authorized
   if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
+    console.log("Unauthorised call");
     return res.status(401).end('Unauthorized');
   }
 
