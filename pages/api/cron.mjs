@@ -33,12 +33,27 @@ export default async function handler(req, res) {
 
   // Capture incoming messages and parse for power usage
   client.on('message', (topic, message) => {
-    console.log(`Message received on topic ${topic}: ${message.toString()}`);
     try {
-      const data = JSON.parse(message.toString());
-      if (data && data.ENERGY && data.ENERGY.Power > 10) {
-        console.log("Power usage detected.");
-        powerUseDetected = true;
+      const data = message.toString();
+      const timeRegex = /(\d{2}:\d{2}:\d{2})/;
+      const match = data.match(timeRegex);
+
+      if (match) {
+        const [hours, minutes] = match[0].split(':').map(Number);
+        const messageTimeUTC = new Date();
+        messageTimeUTC.setUTCHours(hours, minutes, 0);
+
+        // Check if message time is between 03:00 and 10:00 UTC
+        const startWindow = new Date();
+        startWindow.setUTCHours(3, 0, 0, 0);
+
+        const endWindow = new Date();
+        endWindow.setUTCHours(10, 0, 0, 0);
+
+        if (messageTimeUTC >= startWindow && messageTimeUTC <= endWindow) {
+          powerUseDetected = true;
+          console.log(`Power usage detected at ${match[0]} UTC`);
+        }
       }
     } catch (error) {
       console.error("Error parsing MQTT message:", error);
