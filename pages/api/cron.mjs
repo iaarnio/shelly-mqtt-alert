@@ -60,8 +60,12 @@ export default async function handler(req, res) {
     }
   });
 
+  console.log('before wait');
+
   // Wait a few seconds to capture messages
   await new Promise((resolve) => setTimeout(resolve, 5000));
+
+  console.log('after wait');
 
   // If no power usage was detected, send an alert
   if (!powerUseDetected) {
