@@ -14,7 +14,7 @@ async function checkBoilerUsage() {
 
   // Log client connection and subscription
   client.on('connect', () => {
-    console.log('Connected to MQTT broker');
+    console.log("Connecting to MQTT broker at:", process.env.MQTT_HOST);
     client.subscribe('cmnd/shellyplug/usage/#', (err) => {
       if (err) {
         console.error("Subscription error:", err);

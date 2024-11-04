@@ -1,58 +1,42 @@
 const mqtt = require('mqtt');
-const cron = require('node-cron');
-const nodemailer = require('nodemailer');
+const aws = require('aws-sdk');
 
-// MQTT Connection
-const client = mqtt.connect({
-    host: process.env.MQTT_HOST,
-    username: process.env.MQTT_USERNAME,
-    password: process.env.MQTT_PASSWORD
-});
+// Initialize SNS for email notifications
+const sns = new aws.SNS({ region: 'your-region' });
+const topicArn = 'YOUR_SNS_TOPIC_ARN'; // Replace with the ARN of the SNS topic you’ll set up
 
-let powerUseDetected = false; // Flag to track power usage
-
-// Nodemailer setup
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
-
-function sendAlert(message) {
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: process.env.EMAIL_USER,
-        subject: 'Boiler Usage Alert',
-        text: message
+// Lambda handler
+exports.handler = async (event) => {
+    // MQTT connection setup
+    const mqttOptions = {
+        host: process.env.MQTT_HOST,
+        username: process.env.MQTT_USERNAME,
+        password: process.env.MQTT_PASSWORD
     };
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) console.log(`Error: ${error}`);
-        else console.log(`Email sent: ${info.response}`);
-    });
-}
+    const client = mqtt.connect(mqttOptions);
 
-// Check for power usage during the monitoring window (05:00 - 12:00)
-client.on('message', (topic, message) => {
+    let powerUseDetected = false;
     const currentTime = new Date();
-    const currentHour = currentTime.getHours();
 
-    if (!powerUseDetected && currentHour >= 5 && currentHour < 12) {
-        powerUseDetected = true;
-        console.log(`Power usage detected at ${currentTime.toISOString()}`);
+    // Subscribe to the MQTT topic
+    client.on('connect', () => {
+        client.subscribe('cmnd/shellyplug/usage/alert');
+    });
+
+    // Set power usage flag within time window
+    client.on('message', (topic, message) => {
+        if (topic === 'cmnd/shellyplug/usage/alert') {
+            powerUseDetected = true;
+            client.end();
+        }
+    });
+
+    // Check for the alert window time
+    if (currentTime.getHours() >= 5 && currentTime.getHours() < 12 && !powerUseDetected) {
+        await sns.publish({
+            Message: 'Ei vedenkeittimen käyttöä tänä aamuna',
+            TopicArn: topicArn
+        }).promise();
     }
-});
-
-// Schedule the 12:03 daily check using node-cron
-cron.schedule('03 12 * * *', () => {
-    checkUsage();
-});
-
-// Define checkUsage to send an alert if no power usage was detected
-function checkUsage() {
-    if (!powerUseDetected) {
-      sendAlert("Ei vedenkeittimen käyttöä klo 05:00-12:00 välillä.");
-    }
-    powerUseDetected = false; // Reset flag for the next day
-}
+    return { statusCode: 200, body: 'Lambda execution complete' };
+};
