@@ -1,15 +1,8 @@
 import mqtt from 'mqtt';
 import nodemailer from 'nodemailer';
 
-export default async function handler(req, res) {
-  // Ensure the request is authorized
-  if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
-    console.log("Unauthorized call - Missing or invalid authorization header.");
-    return res.status(401).end('Unauthorized');
-  }
-
-
-  console.log("Cron job started.");
+async function checkBoilerUsage() {
+  console.log("Starting daily boiler usage check.");
 
   let powerUseDetected = false;
 
@@ -19,7 +12,7 @@ export default async function handler(req, res) {
     password: process.env.MQTT_PASSWORD,
   });
 
-  // Log client connection
+  // Log client connection and subscription
   client.on('connect', () => {
     console.log('Connected to MQTT broker');
     client.subscribe('cmnd/shellyplug/usage/#', (err) => {
@@ -62,12 +55,12 @@ export default async function handler(req, res) {
 
   console.log('before wait');
 
-  // Wait a few seconds to capture messages
+  // Wait briefly to capture messages
   await new Promise((resolve) => setTimeout(resolve, 5000));
 
   console.log('after wait');
 
-  // If no power usage was detected, send an alert
+  // If no power usage was detected, send an alert email
   if (!powerUseDetected) {
     console.log("No power usage detected. Sending alert email.");
     const transporter = nodemailer.createTransport({
@@ -82,7 +75,7 @@ export default async function handler(req, res) {
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_USER,
       subject: 'No Boiler Usage Detected',
-      text: 'No boiler usage detected this morning.',
+      text: 'No boiler usage detected this morning by 10:00 UTC.',
     };
 
     try {
@@ -100,6 +93,8 @@ export default async function handler(req, res) {
     console.log("Disconnected from MQTT broker.");
   });
 
-  res.status(200).json({ message: 'Daily check completed' });
-  console.log("Cron job completed.");
+  console.log("Daily check completed.");
 }
+
+// Execute the check function
+checkBoilerUsage();
