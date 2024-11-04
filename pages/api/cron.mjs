@@ -6,6 +6,8 @@ async function checkBoilerUsage() {
 
   let powerUseDetected = false;
 
+  console.log("Connecting to MQTT broker at:", process.env.MQTT_HOST);
+
   // Configure the MQTT client
   const client = mqtt.connect(process.env.MQTT_HOST, {
     username: process.env.MQTT_USERNAME,
