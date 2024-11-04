@@ -2,14 +2,12 @@
   "name": "shelly-mqtt-alert",
   "version": "1.0.0",
   "type": "module",
+  "main": "netlify/functions/checkBoilerUsage.js",
   "scripts": {
-    "start": "node pages/api/cron.mjs"
+    "build": "echo 'No build step required for Netlify Functions'"
   },
   "dependencies": {
     "mqtt": "^5.10.1",
     "nodemailer": "^6.9.15"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  }
 }
