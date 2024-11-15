@@ -48,7 +48,8 @@ export async function handler(event, context) {
   });
 
   client.on('message', (topic, message) => {
-    try {
+      console.log(`Message received on topic ${topic}: ${message.toString()}`);
+      try {
       const data = message.toString();
       const timeRegex = /(\d{2}:\d{2}:\d{2})/;
       const match = data.match(timeRegex);
@@ -65,6 +66,11 @@ export async function handler(event, context) {
         const endWindow = new Date();
         endWindow.setUTCHours(10, 0, 0, 0);
 
+        console.log(`Received MQTT message: ${data}`);
+        console.log(`Timestamp extracted: ${match[0]} UTC`);
+        console.log(`Start window: ${startWindow}`);
+        console.log(`End window: ${endWindow}`);
+
         if (messageTimeUTC >= startWindow && messageTimeUTC <= endWindow) {
           powerUseDetected = true;
           console.log(`Power usage detected at ${match[0]} UTC`);
@@ -75,7 +81,7 @@ export async function handler(event, context) {
     }
   });
 
-  await new Promise((resolve) => setTimeout(resolve, 5000));
+  await new Promise((resolve) => setTimeout(resolve, 10000));
 
   if (!powerUseDetected) {
     await sendAlert();
