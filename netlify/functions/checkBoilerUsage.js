@@ -81,13 +81,21 @@ export async function handler(event, context) {
     }
   });
 
-  await new Promise((resolve) => setTimeout(resolve, 10000));
+  await new Promise((resolve) => setTimeout(resolve, 15000)); // Wait 15 seconds
 
   if (!powerUseDetected) {
     await sendAlert();
   } else {
     console.log("Power usage detected, no alert sent.");
   }
+
+  client.on('error', (err) => {
+    console.error("MQTT connection error:", err.message);
+  });
+
+  client.on('offline', () => {
+    console.log("MQTT client went offline");
+  });
 
   client.end(true, () => {
     console.log("Disconnected from MQTT broker.");
