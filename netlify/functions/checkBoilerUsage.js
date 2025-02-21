@@ -88,7 +88,7 @@ export async function handler(event, context) {
     console.log("MQTT client went offline");
   });
 
-  // Disconnect from MQTT
+  client.on('close', () => console.log('MQTT connection closed.'));
   client.end(true, () => {
     console.log("Disconnected from MQTT broker.");
   });
