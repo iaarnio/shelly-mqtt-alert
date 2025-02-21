@@ -11,6 +11,8 @@ export async function handler(event, context) {
   const client = mqtt.connect(process.env.MQTT_HOST, {
     username: process.env.MQTT_USERNAME,
     password: process.env.MQTT_PASSWORD,
+    clientId: 'NetlifyFunctionClient',
+    clean: true,
   });
 
   // Set up nodemailer
