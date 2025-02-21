@@ -68,9 +68,7 @@ export async function handler(event, context) {
     }
   });
 
-  // Wait ~15 seconds for any retained or incoming messages
-  await new Promise((resolve) => setTimeout(resolve, 15000));
-
+  await new Promise((resolve) => setTimeout(resolve, 8000)); // 8 seconds
 
   const USAGE_THRESHOLD = 0.05; // kWh
 
