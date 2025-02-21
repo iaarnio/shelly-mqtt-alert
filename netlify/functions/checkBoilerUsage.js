@@ -70,7 +70,7 @@ export async function handler(event, context) {
     }
   });
 
-  await new Promise((resolve) => setTimeout(resolve, 8000)); // 8 seconds
+  await new Promise((resolve) => setTimeout(resolve, 6000)); // Wait 6 seconds
 
   const USAGE_THRESHOLD = 0.05; // kWh
 
@@ -91,8 +91,12 @@ export async function handler(event, context) {
   });
 
   client.on('close', () => console.log('MQTT connection closed.'));
-  client.end(true, () => {
-    console.log("Disconnected from MQTT broker.");
+
+  await new Promise(resolve => {
+    client.end(true, () => {
+      console.log("Disconnected from MQTT broker.");
+      resolve();
+    });
   });
 
   // Return success response
