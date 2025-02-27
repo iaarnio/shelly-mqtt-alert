@@ -72,7 +72,7 @@ export async function handler(event, context) {
 
   await new Promise((resolve) => setTimeout(resolve, 6000)); // Wait 6 seconds
 
-  const USAGE_THRESHOLD = 0.05; // kWh
+  const USAGE_THRESHOLD = 0.02; // kWh
 
   // Decide if usage occurred
   if (usageToday > USAGE_THRESHOLD) {
